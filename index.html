@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<fieldset id="chat">
+    Loading chat...
+</fieldset>
+
+<fieldset>
+    <form>
+        <input name="name" placeholder="Your name">
+        <input name="message" placeholder="Message">
+        <button>submit</button>
+    </form>
+</fieldset>
+
+<script>
+    const chat = document.querySelector("#chat");
+    const form = document.querySelector("form");
+
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        sendChat(form);
+    });
+
+    getChat();
+
+    async function sendChat(form) {
+        const name = form.name.value;
+        const message = form.message.value;
+
+        const response = await fetch(`http://localhost:3000/create-message?name=${name}&message=${message}`);
+        const messages = await response.json();
+
+        renderMessages(messages);
+
+        form.message.value = '';
+    }
+
+    async function getChat() {
+        const response = await fetch('http://localhost:3000/read-messages');
+        const messages = await response.json();
+        renderMessages(messages);
+    }
+
+    function renderMessages(messages) {
+        chat.innerHTML = messages.map(m => `
+            <p><strong>${m.name}</strong>: ${m.message}</p>
+        `).join('');
+    }
+</script>
+
+</body>
+</html>
