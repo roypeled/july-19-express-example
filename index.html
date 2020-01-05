@@ -11,29 +11,74 @@
 </fieldset>
 
 <fieldset>
-    <form>
+    <form id="newMessage">
         <input name="name" placeholder="Your name">
         <input name="message" placeholder="Message">
         <button>submit</button>
+    </form>
+    <hr>
+    <button id="clearBtn">Clear history</button>
+    <button id="clearFirstBtn">Delete 1st message</button>
+    <hr>
+    <form>
+        <input placeholder="ID" type="number">
+        <button>Delete</button>
+    </form>
+    <hr>
+    <form>
+        <input placeholder="ID" type="number">
+        <input placeholder="name">
+        <button>change name</button>
     </form>
 </fieldset>
 
 <script>
     const chat = document.querySelector("#chat");
-    const form = document.querySelector("form");
+    const form = document.querySelector("form#newMessage");
+    const clearBtn = document.querySelector("#clearBtn");
+    const clearFirstBtn = document.querySelector("#clearFirstBtn");
+    let messagesHistory;
 
     form.addEventListener('submit', e => {
         e.preventDefault();
         sendChat(form);
     });
 
+    clearBtn.addEventListener('click', () => clearChat());
+    clearFirstBtn.addEventListener('click', () => deleteFirstMessage());
+
     getChat();
+
+    async function deleteFirstMessage() {
+        const response = await fetch('http://localhost:3000/messages/' + messagesHistory[0].id, {
+            method: 'DELETE'
+        });
+        const messages = await response.json();
+        renderMessages(messages);
+    }
+
+    async function clearChat() {
+        const response = await fetch('http://localhost:3000/messages', {
+            method: 'DELETE',
+        });
+        const messages = await response.json();
+
+        renderMessages(messages);
+    }
 
     async function sendChat(form) {
         const name = form.name.value;
         const message = form.message.value;
 
-        const response = await fetch(`http://localhost:3000/create-message?name=${name}&message=${message}`);
+        const response = await fetch(`http://localhost:3000/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name, message
+            })
+        });
         const messages = await response.json();
 
         renderMessages(messages);
@@ -42,12 +87,13 @@
     }
 
     async function getChat() {
-        const response = await fetch('http://localhost:3000/read-messages');
+        const response = await fetch('http://localhost:3000/messages');
         const messages = await response.json();
         renderMessages(messages);
     }
 
     function renderMessages(messages) {
+        messagesHistory = messages;
         chat.innerHTML = messages.map(m => `
             <p><strong>${m.name}</strong>: ${m.message}</p>
         `).join('');
